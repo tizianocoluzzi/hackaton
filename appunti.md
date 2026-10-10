@@ -1,0 +1,2 @@
+Idee:
+- crowdsourcing per jamming
