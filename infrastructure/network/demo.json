@@ -1,0 +1,109 @@
+{
+  "id": "demo-switch-v1",
+  "expected_vehicles": [
+    "TRAIN_001",
+    "TRAIN_002",
+    "TRAIN_003"
+  ],
+  "segments": [
+    {
+      "id": "approach",
+      "coordinates": [
+        [
+          44.99100678394081,
+          9.0
+        ],
+        [
+          44.99982013567882,
+          9.0
+        ]
+      ],
+      "connections": [
+        "switch"
+      ],
+      "kind": "track",
+      "level": 0,
+      "width_m": 2
+    },
+    {
+      "id": "switch",
+      "coordinates": [
+        [
+          44.99982013567882,
+          9.0
+        ],
+        [
+          45.00017986432118,
+          9.0
+        ]
+      ],
+      "connections": [
+        "approach",
+        "branch-a",
+        "branch-b"
+      ],
+      "kind": "switch",
+      "level": 0,
+      "width_m": 2
+    },
+    {
+      "id": "branch-a",
+      "coordinates": [
+        [
+          45.00017986432118,
+          9.0
+        ],
+        [
+          45.01079185927102,
+          9.0
+        ]
+      ],
+      "connections": [
+        "switch"
+      ],
+      "kind": "track",
+      "level": 0,
+      "width_m": 2
+    },
+    {
+      "id": "branch-b",
+      "coordinates": [
+        [
+          45.00017986432118,
+          9.0
+        ],
+        [
+          45.00143891456947,
+          9.000890282968419
+        ],
+        [
+          45.01079185927102,
+          9.000890282968419
+        ]
+      ],
+      "connections": [
+        "switch"
+      ],
+      "kind": "track",
+      "level": 0,
+      "width_m": 2
+    },
+    {
+      "id": "overpass",
+      "coordinates": [
+        [
+          45.0,
+          8.996184501563924
+        ],
+        [
+          45.0,
+          9.003815498436076
+        ]
+      ],
+      "connections": [],
+      "kind": "bridge",
+      "level": 1,
+      "width_m": 2
+    }
+  ]
+}

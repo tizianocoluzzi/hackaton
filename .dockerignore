@@ -1,0 +1,7 @@
+**
+!shared/
+!shared/*.py
+!services/
+!services/**
+**/__pycache__/
+**/*.pyc

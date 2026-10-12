@@ -1,0 +1,5 @@
+window.RUNTIME_CONFIG = {
+    rabbitmqURL: ${WS_URL_JSON},
+    username: ${WS_USER_JSON},
+    password: ${WS_PASSWORD_JSON}
+};

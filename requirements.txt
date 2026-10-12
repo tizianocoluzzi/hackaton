@@ -1,5 +1,2 @@
-git+https://github.com/openskynetwork/opensky-api.git#subdirectory=python
-matplotlib
-numpy
-cartopy
-pandas
+# Offline preprocessing/training: identiche versioni del container ML.
+-r services/classification/requirements.txt

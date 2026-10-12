@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>MERMEC | GNSS Monitoring</title>
+
+    <link rel="stylesheet"
+          href="css/style.css">
+
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
+</head>
+
+<body>
+    <header class="topbar">
+        <div>
+            <h1>MERMEC <span>SAFE MOBILITY</span></h1>
+            <p>GNSS / PNT Resilience Monitoring System</p>
+        </div>
+
+        <div class="connection">
+            <span id="connection-dot" class="dot"></span>
+            <span id="connection-status">IN ATTESA</span>
+        </div>
+    </header>
+
+    <div class="toolbar">
+        <div class="file-picker">
+            <label for="track-select">File CSV da analizzare</label>
+            <select id="track-select"><option value="">Caricamento file…</option></select>
+        </div>
+        <button id="analyze-btn">Analizza dall’inizio</button>
+        <button id="start-btn">Riprendi aggiornamenti</button>
+        <button id="stop-btn">Sospendi aggiornamenti</button>
+        <p id="selection-status" role="status">Caricamento del catalogo…</p>
+    </div>
+
+    <main class="dashboard">
+
+        <section class="metrics">
+            <div class="card">
+                <h3>STATO GNSS</h3>
+                <div id="system-status" class="status attention">
+                    IN ATTESA
+                </div>
+                <p id="status-description">In attesa di telemetria</p>
+            </div>
+
+            <div class="card">
+                <h3>SCORE DIMOSTRATIVO</h3>
+                <p>Indice dimostrativo, non una probabilità calibrata</p>
+                <div class="big-value" id="confidence">--</div>
+                <div class="progress">
+                    <div id="confidence-bar"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>SATELLITI UTILIZZATI</h3>
+                <div class="big-value" id="satellites">--</div>
+                <p>Satelliti GNSS</p>
+            </div>
+
+            <div class="card">
+                <h3>HDOP</h3>
+                <div class="big-value" id="hdop">--</div>
+                <p>Diluizione orizzontale della precisione</p>
+            </div>
+
+            <div class="card">
+                <h3>QUALITÀ SEGNALE</h3>
+                <div class="big-value" id="signal">-- dB-Hz</div>
+                <p>Rapporto portante/rumore (dB-Hz)</p>
+            </div>
+        </section>
+
+        <section class="main-grid">
+
+            <div class="card map-card">
+                <div class="section-heading">
+                    <h2>MONITORAGGIO TRAIETTORIA</h2>
+                    <span id="vehicle-id">TRAIN_001</span>
+                </div>
+
+                <p class="active-file">File in analisi: <strong id="active-file">--</strong></p>
+                <div class="map-controls">
+                    <button id="route-view-btn">Inquadra percorso</button>
+                    <button id="positions-view-btn">Centra posizioni</button>
+                </div>
+                <div id="map"></div>
+
+                <div class="map-legend">
+                    <span><i class="legend-route" aria-hidden="true"></i>Percorso previsto</span>
+                    <span><i class="legend-gps" aria-hidden="true"></i><span id="gps-map-status">Posizione GPS attuale</span></span>
+                    <span><i class="legend-crowd" aria-hidden="true"></i><span id="crowd-map-status">Posizione media utenti</span></span>
+                </div>
+                <p id="route-status">La traccia grigia rappresenta il percorso previsto, non le misure GPS.</p>
+            </div>
+
+            <div class="side-panel">
+
+                <div class="card">
+                    <h2>GPS DEL MEZZO · ULTIMO CAMPIONE</h2>
+                    <div class="data-row">
+                        <span>Velocità</span>
+                        <strong id="speed">-- km/h</strong>
+                    </div>
+                    <div class="data-row">
+                        <span>Heading</span>
+                        <strong id="heading">--°</strong>
+                    </div>
+                    <div class="data-row">
+                        <span>Latitudine</span>
+                        <strong id="latitude">--</strong>
+                    </div>
+                    <div class="data-row">
+                        <span>Longitudine</span>
+                        <strong id="longitude">--</strong>
+                    </div>
+                    <div class="data-row">
+                        <span>GNSS Fix</span>
+                        <strong id="fix">--</strong>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>POSIZIONE MEDIA DEGLI UTENTI</h2>
+                    <p>Media delle posizioni dei telefoni a bordo, indipendente dal ricevitore GPS del mezzo.</p>
+                    <div class="data-row"><span>Latitudine media</span><strong id="crowd-latitude">--</strong></div>
+                    <div class="data-row"><span>Longitudine media</span><strong id="crowd-longitude">--</strong></div>
+                    <div class="data-row"><span>Telefoni utilizzati</span><strong id="crowd-phones">--</strong></div>
+                </div>
+                <div class="card">
+                    <h2>ANOMALY DETECTION</h2>
+                    <div id="anomaly" class="anomaly-box">
+                        Nessuna anomalia
+                    </div>
+                    <p id="anomaly-message">
+                        In attesa di telemetria.
+                    </p>
+                </div>
+
+                <div class="card">
+                    <h2>FALLBACK CONSIGLIATO</h2>
+                    <p id="fallback">
+                        Nessuna azione necessaria.
+                    </p>
+                </div>
+
+            </div>
+        </section>
+
+        <section class="bottom-grid">
+            <div class="card">
+                <h2>LOCALIZZAZIONE</h2>
+                <label for="vehicle-select">Mezzo visualizzato</label>
+                <select id="vehicle-select" aria-label="Mezzo visualizzato"></select>
+                <p id="localization-status">In attesa della localizzazione</p>
+                <p id="localization-detail"></p>
+                <p class="localization-legend">● Blu: GNSS utilizzabile · ● Giallo: stima · ● Verde: mezzi · ● Arancio: destinatari<br>
+                Rosso trasparente: area d’incertezza stimata · Linee rosse: occupazioni possibili</p>
+                <small>Stima dimostrativa: nessuna percentuale di contenimento validata.</small>
+            </div>
+            <div class="card">
+                <h2>OCCUPAZIONI E ALLARMI</h2>
+                <p id="alerts-status" role="status">In attesa del servizio allarmi</p>
+                <div id="alerts-list" aria-live="polite"></div>
+            </div>
+        </section>
+        <section class="bottom-grid">
+
+            <div class="card">
+                <h2>SCORE DIMOSTRATIVO · CRONOLOGIA</h2>
+                <div class="chart-container">
+                    <canvas id="confidence-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="section-heading">
+                    <h2>EVENT LOG</h2>
+                    <button id="export-btn">Esporta CSV</button>
+                </div>
+
+                <div class="event-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Ora</th>
+                                <th>Stato</th>
+                                <th>Evento</th>
+                            </tr>
+                        </thead>
+                        <tbody id="event-log"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <footer>
+        <span>SAFE MOBILITY HACK 2026</span>
+        <span id="last-update">Ultimo aggiornamento: --</span>
+    </footer>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="config.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

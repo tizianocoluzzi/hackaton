@@ -1,0 +1,168 @@
+{
+  "users": [
+    {
+      "name": "__ADMIN_USER__",
+      "password": "__ADMIN_PASSWORD__",
+      "tags": [
+        "administrator"
+      ]
+    },
+    {
+      "name": "__SIMULATION_USER__",
+      "password": "__SIMULATION_PASSWORD__",
+      "tags": []
+    },
+    {
+      "name": "__CLASSIFICATION_USER__",
+      "password": "__CLASSIFICATION_PASSWORD__",
+      "tags": []
+    },
+    {
+      "name": "__FRONTEND_USER__",
+      "password": "__FRONTEND_PASSWORD__",
+      "tags": []
+    },
+    {
+      "name": "__ALERTS_USER__",
+      "password": "__ALERTS_PASSWORD__",
+      "tags": []
+    }
+  ],
+  "vhosts": [
+    {
+      "name": "/"
+    }
+  ],
+  "permissions": [
+    {
+      "user": "__ADMIN_USER__",
+      "vhost": "/",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    },
+    {
+      "user": "__SIMULATION_USER__",
+      "vhost": "/",
+      "configure": "^$",
+      "write": "^gnss\\.events$",
+      "read": "^$"
+    },
+    {
+      "user": "__CLASSIFICATION_USER__",
+      "vhost": "/",
+      "configure": "^$",
+      "write": "^gnss\\.events$",
+      "read": "^classification\\.raw\\.v1$"
+    },
+    {
+      "user": "__FRONTEND_USER__",
+      "vhost": "/",
+      "configure": "^(amq\\.gen-|stomp-subscription-).*",
+      "write": "^(amq\\.gen-|stomp-subscription-).*",
+      "read": "^(gnss\\.events|(amq\\.gen-|stomp-subscription-).*)$"
+    },
+    {
+      "user": "__ALERTS_USER__",
+      "vhost": "/",
+      "configure": "^$",
+      "write": "^gnss\\.events$",
+      "read": "^alerts\\.classified\\.v1$"
+    }
+  ],
+  "topic_permissions": [
+    {
+      "user": "__SIMULATION_USER__",
+      "vhost": "/",
+      "exchange": "gnss.events",
+      "write": "^telemetry\\.raw\\.v1$",
+      "read": "^$"
+    },
+    {
+      "user": "__CLASSIFICATION_USER__",
+      "vhost": "/",
+      "exchange": "gnss.events",
+      "write": "^telemetry\\.classified\\.v1$",
+      "read": "^$"
+    },
+    {
+      "user": "__FRONTEND_USER__",
+      "vhost": "/",
+      "exchange": "gnss.events",
+      "write": "^$",
+      "read": "^(telemetry\\.classified\\.v1|alerts\\.snapshot\\.v1)$"
+    },
+    {
+      "user": "__ALERTS_USER__",
+      "vhost": "/",
+      "exchange": "gnss.events",
+      "write": "^alerts\\.snapshot\\.v1$",
+      "read": "^telemetry\\.classified\\.v1$"
+    }
+  ],
+  "exchanges": [
+    {
+      "name": "gnss.events",
+      "vhost": "/",
+      "type": "topic",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    }
+  ],
+  "queues": [
+    {
+      "name": "classification.raw.v1",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-dead-letter-exchange": "",
+        "x-dead-letter-routing-key": "classification.raw.dlq"
+      }
+    },
+    {
+      "name": "classification.raw.dlq",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    },
+    {
+      "name": "alerts.classified.v1",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-dead-letter-exchange": "",
+        "x-dead-letter-routing-key": "alerts.dlq"
+      }
+    },
+    {
+      "name": "alerts.dlq",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    }
+  ],
+  "bindings": [
+    {
+      "source": "gnss.events",
+      "vhost": "/",
+      "destination": "classification.raw.v1",
+      "destination_type": "queue",
+      "routing_key": "telemetry.raw.v1",
+      "arguments": {}
+    },
+    {
+      "source": "gnss.events",
+      "vhost": "/",
+      "destination": "alerts.classified.v1",
+      "destination_type": "queue",
+      "routing_key": "telemetry.classified.v1",
+      "arguments": {}
+    }
+  ]
+}

@@ -1,88 +1,7 @@
 #!/usr/bin/env python3
-"""
-train_gnss_generator.py  (v2: + IMU and crowdsourced phone GNSS)
-================================================================
-Synthetic train GNSS track generator with tunable receiver errors and
-injectable anomalies (spoofing, jamming, low satellite count, multipath, tunnel),
-plus two *independent* sensor sources generated from the TRUE (non-altered)
-train motion:
-
-  * an on-board IMU (accelerometer + yaw-rate gyro), never touched by GNSS anomalies
-  * crowdsourced GNSS from passengers' phones (aggregated into one "average" position)
-
-Output CSV columns (this order)
--------------------------------
-Original receiver block (always present):
-    timestamp, latitude, longitude, speed, heading, satellites_used, hdop,
-    fix_status, signal_quality, reference_position_available, anomaly_label
-
-IMU block (disable with --no-imu):
-    accel_x    longitudinal specific force [m/s^2], +forward (acceleration > 0, braking < 0)
-    accel_y    lateral specific force [m/s^2], +right. Includes track cant (banking),
-               so in a curve it is  v^2*k*cos(phi) - g*sin(phi)
-    accel_z    vertical specific force [m/s^2], +up (~ +9.81 at rest; includes vibration)
-    gyro_z     yaw rate [deg/s], +clockwise seen from above (right turn > 0), = v * curvature
-    vib_rms    RMS of broadband vibration over the epoch [m/s^2] (grows with speed)
-
-Crowdsourced block (disable with --no-crowd):
-    crowd_latitude, crowd_longitude   aggregate (mean | median | trimmed) of the phone fixes
-    crowd_speed                       mean phone speed (same unit as `speed`)
-    crowd_heading                     circular mean of phone headings [deg]
-    crowd_num_phones                  phones that delivered a valid fix at that epoch
-    crowd_pos_std_m                   dispersion of phone positions around the aggregate [m]
-    crowd_accuracy_m                  mean horizontal accuracy reported by the phones [m]
-    (empty fields when no phone has a fix, e.g. in a tunnel)
-
-With --with-truth: truth_latitude, truth_longitude, truth_speed are appended.
-
-Crowd model
------------
-Up to --crowd-max-phones phone "slots" ride in a train of --train-length-m. Passenger
-occupancy changes at every station stop (some alight, some board). Each phone sits at
-a random place along/across the train (so its true position is offset from the
-antenna reference, which is at the train centre unless --antenna-offset-m is set),
-has its own correlated error (lognormal spread around --phone-sigma-m), random
-dropouts, and occasional outliers (stale / network fixes). Phones are independent
-receivers: by default only `tunnel` affects them (--crowd-affected-by selects which
-anomalies also hit them: tunnel, jamming, multipath, spoofing).
-
-Quick examples
---------------
-  # 5 mixed tracks, 3 random anomalies each (IMU + crowd included)
-  python train_gnss_generator.py --num-tracks 5 --random-anomalies 3 --seed 42
-
-  # spoofing that does NOT affect phones, robust median aggregation
-  python train_gnss_generator.py --track-type s_curve --length-km 30 \
-      --anomaly "spoofing:300:120:mode=drift,magnitude=400,ramp=90" \
-      --anomaly "jamming:700:90:peak=1.0,cn0_drop=28" \
-      --crowd-aggregate median
-
-  # spoofer also hits the phones, busier train, noisier phones
-  python train_gnss_generator.py --crowd-affected-by tunnel spoofing \
-      --crowd-mean-phones 30 --phone-sigma-m 9
-
-  # original 11-column format only
-  python train_gnss_generator.py --no-imu --no-crowd
-
-Anomaly spec syntax:  kind:start_s:duration_s[:key=value,key=value,...]
-
-Anomaly kinds and their parameters
-----------------------------------
-spoofing        mode=drift|jump (drift)   magnitude=<m> (300)   ramp=<s> (0.7*dur)
-                direction=<deg> (random)  consistent_velocity=0|1 (0)
-                stealth=0..1 (0)          cn0_boost=<dB> (4)    sats=<n> (nominal)
-                -> position offset; with stealth<0.5 also an unnaturally strong,
-                   flat signal (high C/N0, constant sat count, low HDOP).
-jamming         peak=0..1 (1)  ramp=<s> (0.3*dur)  cn0_drop=<dB> (25)
-                no_fix_threshold=0..1 (0.7)  pos_sigma=<m> (20)
-                -> C/N0 collapse, satellites lost, HDOP up, fix lost at high intensity.
-low_satellites  min_sats=<n> (3)  max_sats=<n> (5)  hdop_mult=<x> (1.5)
-                cn0_delta=<dB> (-2)
-                -> few satellites, poor geometry, signal level only mildly affected.
-multipath       sigma=<m> (8)  sat_loss=<n> (3)  hdop_mult=<x> (1.8)  cn0_delta=<dB> (-5)
-                -> short-correlated position errors, degraded HDOP, jittery C/N0.
-tunnel          cn0=<dB> (5)
-                -> total signal loss (0 satellites, NO_FIX).
+"""Synthetic railway GNSS, independent estimated state and static route generator.
+See DATA_GENERATION.md for configuration, units and training/evaluation protocol.
+Anomaly syntax: kind:start_s:duration_s[:key=value,key=value,...].
 """
 
 from __future__ import annotations
@@ -110,7 +29,9 @@ COLUMNS = [
     "satellites_used", "hdop", "fix_status", "signal_quality",
     "reference_position_available", "anomaly_label",
 ]
-IMU_COLUMNS = ["accel_x", "accel_y", "accel_z", "gyro_z", "vib_rms"]
+IMU_COLUMNS = ["estimated_latitude", "estimated_longitude", "estimated_speed",
+               "estimated_heading", "estimated_pos_var_m2", "estimated_speed_var_ms2",
+               "estimated_heading_var_deg2"]
 CROWD_COLUMNS = ["crowd_latitude", "crowd_longitude", "crowd_speed", "crowd_heading",
                  "crowd_num_phones", "crowd_pos_std_m", "crowd_accuracy_m"]
 TRUTH_COLUMNS = ["truth_latitude", "truth_longitude", "truth_speed"]
@@ -162,16 +83,13 @@ class TrackConfig:
     base_fix: str = "3D"                    # fix_status label used when healthy
 
     # --- IMU (accelerometer + gyro), generated from the true motion ---
+    state_pos_sigma_m: float = 2.0
+    state_speed_sigma_ms: float = 0.15
+    state_heading_sigma_deg: float = 1.0
+    state_corr_s: float = 20.0
+    state_drift_m_sqrt_s: float = 0.1
+    geometry_step_m: float = 1.0
     enable_imu: bool = True
-    imu_error_scale: float = 1.0            # global multiplier on IMU noise / bias
-    imu_noise_ms2: float = 0.02             # white accel noise per epoch (1-sigma)
-    imu_bias_ms2: float = 0.02              # constant per-track accel bias (1-sigma)
-    gyro_noise_dps: float = 0.05            # white gyro noise [deg/s]
-    gyro_bias_dps: float = 0.02             # constant gyro bias (1-sigma) [deg/s]
-    vib_base_ms2: float = 0.02              # vibration RMS floor while moving
-    vib_per_ms: float = 0.0035              # additional vibration RMS per m/s of speed
-    cant_max_deg: float = 6.0               # max track cant (banking) in curves
-
     # --- crowdsourced phones ---
     enable_crowd: bool = True
     crowd_max_phones: int = 40              # simulated phone slots
@@ -382,48 +300,42 @@ def simulate_truth(cfg: TrackConfig, s, vlim, stop_idx, rng):
 # --------------------------------------------------------------------------- #
 # IMU (accelerometer + gyro) from true kinematics
 # --------------------------------------------------------------------------- #
-def simulate_imu(cfg: TrackConfig, s, k, ss, vt, rng: np.random.Generator) -> Dict[str, np.ndarray]:
-    """Specific-force / yaw-rate measurements consistent with the TRUE motion.
+def simulate_estimated_state(cfg, te, tn, vt, th, rng):
+    """Sample a synthetic filter posterior, never using corrupted GNSS.
 
-    Body axes: x forward, y right, z up.  Track cant phi (banking toward the inside of
-    the curve) rotates gravity into the lateral axis:
-        f_x = dv/dt
-        f_y = v^2 k cos(phi) - g sin(phi)
-        f_z = g cos(phi) + v^2 k sin(phi)  (+ vibration)
+    Per-axis position errors combine stationary Gauss-Markov noise and random
+    walk. Variances are ensemble marginal variances, not fitted filter outputs.
     """
-    N = len(ss)
+    n = len(vt)
     dt = 1.0 / cfg.rate_hz
-    sc = cfg.imu_error_scale
+    elapsed = np.arange(n) * dt
+    errors = []
+    for _ in range(2):
+        increments = rng.normal(0, cfg.state_drift_m_sqrt_s * math.sqrt(dt), n)
+        increments[0] = 0
+        errors.append(cfg.state_pos_sigma_m * ar1(n, cfg.state_corr_s, dt, rng)
+                      + np.cumsum(increments))
+    lat, lon = enu_to_latlon(te + errors[0], tn + errors[1], cfg.start_lat, cfg.start_lon)
+    return {
+        "estimated_latitude": lat, "estimated_longitude": lon,
+        "estimated_speed": vt + cfg.state_speed_sigma_ms * ar1(n, cfg.state_corr_s, dt, rng),
+        "estimated_heading": (th + cfg.state_heading_sigma_deg * ar1(n, cfg.state_corr_s, dt, rng)) % 360,
+        "estimated_pos_var_m2": cfg.state_pos_sigma_m ** 2 + elapsed * cfg.state_drift_m_sqrt_s ** 2,
+        "estimated_speed_var_ms2": np.full(n, cfg.state_speed_sigma_ms ** 2),
+        "estimated_heading_var_deg2": np.full(n, cfg.state_heading_sigma_deg ** 2),
+    }
 
-    kt = np.interp(ss, s, k)
-    a_long = np.gradient(vt, dt) if N > 1 else np.zeros(N)
-    yaw = vt * kt                                   # rad/s, + = right turn
-    a_c = vt ** 2 * kt                              # centripetal accel, +right
 
-    v_ref = 0.8 * cfg.max_speed_kmh / 3.6           # cant designed for ~80 % of max speed
-    cant = np.clip(0.6 * np.arctan(kt * v_ref ** 2 / G),
-                   -math.radians(cfg.cant_max_deg), math.radians(cfg.cant_max_deg))
-
-    fx = a_long
-    fy = a_c * np.cos(cant) - G * np.sin(cant)
-    fz = G * np.cos(cant) + a_c * np.sin(cant)
-
-    # sensor errors: constant bias per axis (+ slow wander) and white noise
-    bias = rng.normal(0.0, cfg.imu_bias_ms2 * sc, 3)
-    wander = [0.3 * cfg.imu_bias_ms2 * sc * ar1(N, 300.0, dt, rng) for _ in range(3)]
-    vib_rms = np.where(vt > 0.5, cfg.vib_base_ms2 + cfg.vib_per_ms * vt, 0.3 * cfg.vib_base_ms2)
-    vib_rms = vib_rms * (1.0 + 0.1 * ar1(N, 20.0, dt, rng)) * sc if sc > 0 else vib_rms * 0.0
-    white = cfg.imu_noise_ms2 * sc
-
-    ax = fx + bias[0] + wander[0] + 0.5 * vib_rms * rng.standard_normal(N) + white * rng.standard_normal(N)
-    ay = fy + bias[1] + wander[1] + 1.0 * vib_rms * rng.standard_normal(N) + white * rng.standard_normal(N)
-    az = fz + bias[2] + wander[2] + 1.5 * vib_rms * rng.standard_normal(N) + white * rng.standard_normal(N)
-
-    gbias = rng.normal(0.0, cfg.gyro_bias_dps * sc)
-    gz = np.degrees(yaw) + gbias + cfg.gyro_noise_dps * sc * rng.standard_normal(N) \
-        + 0.2 * np.degrees(vib_rms) * rng.standard_normal(N)
-
-    return {"accel_x": ax, "accel_y": ay, "accel_z": az, "gyro_z": gz, "vib_rms": vib_rms}
+def write_geometry(cfg, path, seed):
+    """Reproduce the route using the same geometry RNG as generate_track."""
+    rng = np.random.default_rng(seed)
+    heading = math.radians(cfg.start_heading_deg) if cfg.start_heading_deg is not None else float(rng.uniform(0, 2 * math.pi))
+    s, e, n, h, k = build_path(cfg.track_type, cfg.length_km * 1000, rng, cfg.geometry_step_m, heading)
+    lat, lon = enu_to_latlon(e, n, cfg.start_lat, cfg.start_lon)
+    with open(path, "w", newline="") as fh:
+        w = csv.writer(fh)
+        w.writerow(["distance_m", "latitude", "longitude", "heading_deg", "curvature_inv_m"])
+        w.writerows(zip(s, lat, lon, np.degrees(h) % 360, k))
 
 
 # --------------------------------------------------------------------------- #
@@ -670,12 +582,22 @@ def _auto(v: str):
 # --------------------------------------------------------------------------- #
 # Main generator
 # --------------------------------------------------------------------------- #
+def validate_config(cfg):
+    for key in ("rate_hz", "length_km", "geometry_step_m", "accel", "decel", "lat_accel", "balise_spacing_m", "hdop_nominal"):
+        if not math.isfinite(getattr(cfg, key)) or getattr(cfg, key) <= 0:
+            raise ValueError(f"{key} must be finite and positive")
+    for key in ("state_pos_sigma_m", "state_speed_sigma_ms", "state_heading_sigma_deg", "state_corr_s", "state_drift_m_sqrt_s"):
+        if not math.isfinite(getattr(cfg, key)) or getattr(cfg, key) < 0:
+            raise ValueError(f"{key} must be finite and nonnegative")
+
+
 def generate_track(cfg: TrackConfig, anomalies: Optional[List[AnomalySpec]] = None,
                    rng: Optional[np.random.Generator] = None):
     """Generate one track. Returns (rows, anomaly_specs). Each row is a dict."""
+    validate_config(cfg)
     rng = rng or np.random.default_rng()
     anomalies = [copy.deepcopy(a) for a in (anomalies or [])]
-    ds = 1.0
+    ds = cfg.geometry_step_m
     dt = 1.0 / cfg.rate_hz
 
     # ---- ground-truth kinematics ----
@@ -825,7 +747,7 @@ def generate_track(cfg: TrackConfig, anomalies: Optional[List[AnomalySpec]] = No
 
     # ---- independent sensors built from the TRUE motion (unaffected by GNSS anomalies) ----
     if cfg.enable_imu:
-        imu = simulate_imu(cfg, s, k, ss, vt, rng)
+        imu = simulate_estimated_state(cfg, te, tn, vt, th, rng)
         for i, r in enumerate(rows):
             for key, arr in imu.items():
                 r[key] = float(arr[i])
@@ -860,8 +782,8 @@ def write_csv(rows, path, speed_unit="ms", with_truth=False, imu=True, crowd=Tru
                     f"{r['signal_quality']:.1f}", r["reference_position_available"],
                     r["anomaly_label"]]
             if imu:
-                line += [fmt(r["accel_x"], ".4f"), fmt(r["accel_y"], ".4f"), fmt(r["accel_z"], ".4f"),
-                         fmt(r["gyro_z"], ".4f"), fmt(r["vib_rms"], ".4f")]
+                line += [fmt(r[key] * (f if key == "estimated_speed" else 1), ".8f")
+                         for key in IMU_COLUMNS]
             if crowd:
                 line += [fmt(r["crowd_latitude"], ".7f"), fmt(r["crowd_longitude"], ".7f"),
                          fmt(r["crowd_speed"] * f, ".3f"), fmt(r["crowd_heading"], ".2f"),
@@ -877,7 +799,7 @@ def write_csv(rows, path, speed_unit="ms", with_truth=False, imu=True, crowd=Tru
 # --------------------------------------------------------------------------- #
 def build_parser():
     p = argparse.ArgumentParser(
-        description="Synthetic train GNSS track generator with injectable anomalies, IMU and crowdsourced GNSS.",
+        description="Synthetic railway GNSS, independent estimated state and static geometry.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__.split("Quick examples")[1] if "Quick examples" in __doc__ else None)
     g = p.add_argument_group("output")
@@ -916,15 +838,13 @@ def build_parser():
     g.add_argument("--no-fix-output", choices=["hold", "nan", "noisy"], default="hold",
                    help="what position is reported during NO_FIX epochs")
 
-    g = p.add_argument_group("IMU (accelerometer + gyro)")
-    g.add_argument("--no-imu", action="store_true", help="omit the IMU columns")
-    g.add_argument("--imu-error-scale", type=float, default=1.0, help="global IMU noise/bias multiplier")
-    g.add_argument("--imu-noise", type=float, default=0.02, help="white accel noise [m/s^2]")
-    g.add_argument("--imu-bias", type=float, default=0.02, help="constant accel bias 1-sigma [m/s^2]")
-    g.add_argument("--vib-base", type=float, default=0.02, help="vibration RMS floor when moving [m/s^2]")
-    g.add_argument("--vib-per-ms", type=float, default=0.0035, help="vibration RMS per m/s of speed")
-    g.add_argument("--cant-max-deg", type=float, default=6.0, help="max track cant in curves [deg]")
-
+    g = p.add_argument_group("independent estimated state")
+    for name, default in [("state-pos-sigma-m", 2.0), ("state-speed-sigma-ms", 0.15),
+                          ("state-heading-sigma-deg", 1.0), ("state-corr-s", 20.0),
+                          ("state-drift-m-sqrt-s", 0.1), ("geometry-step-m", 1.0)]:
+        g.add_argument("--" + name, type=float, default=default)
+    g.add_argument("--config", help="JSON TrackConfig overrides; all dataclass parameters are tunable")
+    g.add_argument("--no-imu", action="store_true", help="omit the independent estimated state (legacy flag name)")
     g = p.add_argument_group("crowdsourced phones")
     g.add_argument("--no-crowd", action="store_true", help="omit the crowdsourced columns")
     g.add_argument("--crowd-max-phones", type=int, default=40, help="simulated phone slots")
@@ -977,9 +897,7 @@ def main(argv=None):
         speed_noise_ms=args.speed_noise, heading_noise_deg=args.heading_noise,
         sats_nominal=args.sats_nominal, hdop_nominal=args.hdop_nominal, cn0_nominal=args.cn0_nominal,
         base_fix=args.base_fix, no_fix_output=args.no_fix_output,
-        enable_imu=not args.no_imu, imu_error_scale=args.imu_error_scale,
-        imu_noise_ms2=args.imu_noise, imu_bias_ms2=args.imu_bias,
-        vib_base_ms2=args.vib_base, vib_per_ms=args.vib_per_ms, cant_max_deg=args.cant_max_deg,
+        enable_imu=not args.no_imu,
         enable_crowd=not args.no_crowd, crowd_max_phones=args.crowd_max_phones,
         crowd_mean_phones=args.crowd_mean_phones, crowd_boarding_frac=args.crowd_boarding_frac,
         train_length_m=args.train_length_m, antenna_offset_m=args.antenna_offset_m,
@@ -991,15 +909,32 @@ def main(argv=None):
         anomaly_duration=tuple(args.anomaly_duration),
     )
 
+    if args.config:
+        overrides = json.loads(open(args.config).read())
+        if "start_time" in overrides:
+            overrides["start_time"] = datetime.fromisoformat(overrides["start_time"].replace("Z", "+00:00"))
+        base = dataclasses.replace(base, **overrides)
+    base = dataclasses.replace(base, **{name: getattr(args, name) for name in
+        ("state_pos_sigma_m", "state_speed_sigma_ms", "state_heading_sigma_deg",
+         "state_corr_s", "state_drift_m_sqrt_s", "geometry_step_m")
+        if not args.config or name not in overrides})
+    validate_config(base)
     for i in range(args.num_tracks):
-        rng = np.random.default_rng(None if args.seed is None else args.seed + i)
+        seed = int(np.random.SeedSequence().entropy) if args.seed is None else args.seed + i
+        rng = np.random.default_rng(seed)
         ttype = str(rng.choice(TRACK_TYPES)) if args.track_type == "random" else args.track_type
         cfg = dataclasses.replace(base, track_type=ttype)
-        rows, specs = generate_track(cfg, manual, rng)
+        # A separate seed keeps geometry identical in the static and temporal files.
+        route_seed = int(rng.integers(0, 2**63))
+        rows, specs = generate_track(cfg, manual, np.random.default_rng(route_seed))
 
         name = f"{args.prefix}_{i:03d}_{ttype}"
         path = os.path.join(args.output_dir, name + ".csv")
         write_csv(rows, path, args.speed_unit, args.with_truth, cfg.enable_imu, cfg.enable_crowd)
+        write_geometry(cfg, os.path.join(args.output_dir, name + ".geometry.csv"), route_seed)
+        with open(os.path.join(args.output_dir, name + ".config.json"), "w") as fh:
+            json.dump({"seed": seed, "route_seed": route_seed, "speed_unit": args.speed_unit,
+                       "config": dataclasses.asdict(cfg)}, fh, indent=2, default=str)
         if args.write_events:
             with open(os.path.join(args.output_dir, name + ".events.json"), "w") as fh:
                 json.dump([{"kind": a.kind, "start_s": round(a.start, 1), "end_s": round(a.end, 1),

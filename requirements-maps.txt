@@ -1,0 +1,5 @@
+# Strumenti cartografici preesistenti, esclusi dai container runtime.
+-r requirements.txt
+matplotlib
+cartopy
+git+https://github.com/openskynetwork/opensky-api.git#subdirectory=python

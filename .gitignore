@@ -1,1 +1,18 @@
 .venv
+
+# Generated notebook datasets and reports
+notebook_demo_dataset/
+notebook_results/
+.ipynb_checkpoints/
+__pycache__/
+
+dataset_processed/
+
+random_forest_models.joblib
+
+# Runtime configuration, regenerated ML artifacts, and preserved local versions
+.env
+models/*.joblib
+processed_dataset/
+.refactor-backup/
+*.pyc

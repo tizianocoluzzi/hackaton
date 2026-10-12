@@ -1,0 +1,77 @@
+{
+  "seed": 130968487772752639551327330409355339188,
+  "route_seed": 8093431430144374180,
+  "speed_unit": "ms",
+  "config": {
+    "track_type": "mixed",
+    "length_km": 20.0,
+    "duration_s": null,
+    "rate_hz": 1.0,
+    "start_lat": 45.0,
+    "start_lon": 9.0,
+    "start_heading_deg": null,
+    "start_time": "2025-01-01 08:00:00+00:00",
+    "max_speed_kmh": 160.0,
+    "accel": 0.7,
+    "decel": 0.8,
+    "lat_accel": 0.9,
+    "n_stations": null,
+    "dwell_s": [
+      30.0,
+      60.0
+    ],
+    "initial_dwell_s": 15.0,
+    "balise_spacing_m": 1500.0,
+    "ref_radius_m": 60.0,
+    "error_scale": 1.0,
+    "pos_noise_m": 1.5,
+    "noise_corr_s": 30.0,
+    "speed_noise_ms": 0.05,
+    "heading_noise_deg": 0.5,
+    "sats_nominal": 14.0,
+    "hdop_nominal": 0.9,
+    "cn0_nominal": 42.0,
+    "cn0_noise": 1.0,
+    "base_fix": "3D",
+    "state_pos_sigma_m": 2.0,
+    "state_speed_sigma_ms": 0.15,
+    "state_heading_sigma_deg": 1.0,
+    "state_corr_s": 20.0,
+    "state_drift_m_sqrt_s": 0.1,
+    "geometry_step_m": 1.0,
+    "enable_imu": true,
+    "enable_crowd": true,
+    "crowd_max_phones": 40,
+    "crowd_mean_phones": 15.0,
+    "crowd_boarding_frac": 0.3,
+    "train_length_m": 200.0,
+    "antenna_offset_m": 0.0,
+    "phone_sigma_m": 6.0,
+    "phone_corr_s": 20.0,
+    "phone_dropout": 0.1,
+    "phone_outlier_prob": 0.02,
+    "phone_outlier_m": [
+      30.0,
+      200.0
+    ],
+    "phone_speed_noise": 0.3,
+    "phone_heading_noise": 6.0,
+    "crowd_aggregate": "mean",
+    "crowd_affected_by": [
+      "tunnel"
+    ],
+    "n_random_anomalies": 0,
+    "anomaly_kinds": [
+      "spoofing",
+      "jamming",
+      "low_satellites",
+      "multipath",
+      "tunnel"
+    ],
+    "anomaly_duration": [
+      30.0,
+      120.0
+    ],
+    "no_fix_output": "hold"
+  }
+}

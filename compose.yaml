@@ -1,0 +1,114 @@
+name: railway-mockup
+services:
+  rabbitmq:
+    image: rabbitmq:4.1-management
+    hostname: rabbitmq
+    entrypoint: ["/bin/sh", "/etc/rabbitmq/start.sh"]
+    environment:
+      ADMIN_USER: ${ADMIN_USER:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin_demo}
+      SIMULATION_USER: ${SIMULATION_USER:-simulation}
+      SIMULATION_PASSWORD: ${SIMULATION_PASSWORD:-simulation_demo}
+      CLASSIFICATION_USER: ${CLASSIFICATION_USER:-classification}
+      CLASSIFICATION_PASSWORD: ${CLASSIFICATION_PASSWORD:-classification_demo}
+      ALERTS_USER: ${ALERTS_USER:-alerts}
+      ALERTS_PASSWORD: ${ALERTS_PASSWORD:-alerts_demo}
+      FRONTEND_USER: ${FRONTEND_USER:-frontend}
+      FRONTEND_PASSWORD: ${FRONTEND_PASSWORD:-frontend_demo}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - ./infrastructure/rabbitmq:/etc/rabbitmq:ro
+    ports:
+      - "127.0.0.1:${MANAGEMENT_PORT:-15672}:15672"
+      - "127.0.0.1:${WEB_STOMP_PORT:-15674}:15674"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+    restart: unless-stopped
+
+  simulation:
+    build:
+      context: .
+      dockerfile: services/simulation/Dockerfile
+    environment:
+      AMQP_HOST: rabbitmq
+      AMQP_USER: ${SIMULATION_USER:-simulation}
+      AMQP_PASSWORD: ${SIMULATION_PASSWORD:-simulation_demo}
+      CSV_PATH: ${CSV_PATH:-/data/gnss_tracks/track_000_mixed.csv}
+      GEOMETRY_ID: ${GEOMETRY_ID:-}
+      VEHICLE_ID: ${VEHICLE_ID:-TRAIN_001}
+      REPLAY_SPEED: ${REPLAY_SPEED:-1}
+      REPLAY_LOOP: ${REPLAY_LOOP:-true}
+    volumes:
+      - ./dataset:/data/dataset:ro
+      - ./gnss_tracks:/data/gnss_tracks:ro
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: on-failure
+
+  classification:
+    build:
+      context: .
+      dockerfile: services/classification/Dockerfile
+    environment:
+      AMQP_HOST: rabbitmq
+      AMQP_USER: ${CLASSIFICATION_USER:-classification}
+      AMQP_PASSWORD: ${CLASSIFICATION_PASSWORD:-classification_demo}
+      RISK_THRESHOLDS: ${RISK_THRESHOLDS:-0.2,0.5,0.8}
+      GNSS_RECOVERY_S: ${GNSS_RECOVERY_S:-10}
+      SOURCE_MAX_AGE_S: ${SOURCE_MAX_AGE_S:-15}
+      MAX_UNCERTAINTY_M: ${MAX_UNCERTAINTY_M:-2000}
+      OMP_NUM_THREADS: "1"
+      OPENBLAS_NUM_THREADS: "1"
+    volumes:
+      - ./dataset:/data/dataset:ro
+      - ./gnss_tracks:/data/gnss_tracks:ro
+      - ./models:/models:ro
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+
+  alerts:
+    build:
+      context: .
+      dockerfile: services/alerts/Dockerfile
+    environment:
+      AMQP_HOST: rabbitmq
+      AMQP_USER: ${ALERTS_USER:-alerts}
+      AMQP_PASSWORD: ${ALERTS_PASSWORD:-alerts_demo}
+      ALERT_HORIZON_S: ${ALERT_HORIZON_S:-300}
+      CLEARANCE_STABILITY_S: ${CLEARANCE_STABILITY_S:-10}
+      CLEARANCE_MARGIN_M: ${CLEARANCE_MARGIN_M:-10}
+      SIMULATED_DELIVERY_FAILURES: ${SIMULATED_DELIVERY_FAILURES:-1}
+    volumes:
+      - ./infrastructure/network:/network:ro
+      - alerts_data:/state
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: services/frontend/Dockerfile
+    environment:
+      WEB_STOMP_URL: ${WEB_STOMP_URL:-ws://localhost:15674/ws}
+      FRONTEND_USER: ${FRONTEND_USER:-frontend}
+      FRONTEND_PASSWORD: ${FRONTEND_PASSWORD:-frontend_demo}
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-8080}:80"
+    depends_on:
+      simulation:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  rabbitmq_data:
+  alerts_data:
