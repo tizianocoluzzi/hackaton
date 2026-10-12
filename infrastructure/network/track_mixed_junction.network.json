@@ -1,0 +1,143 @@
+{
+  "id": "track-mixed-junction-v1",
+  "expected_vehicles": [
+    "TRAIN_001"
+  ],
+  "simulated": true,
+  "scenario_anchor": {
+    "sequence": 330,
+    "timestamp": "2025-01-01T08:05:30.000Z",
+    "latitude": 45.01880639692014,
+    "longitude": 8.90861624347865
+  },
+  "segments": [
+    {
+      "id": "BIVIO",
+      "coordinates": [
+        [
+          45.01890063597666,
+          8.908973877715297
+        ],
+        [
+          45.018712157863625,
+          8.908258609242004
+        ]
+      ],
+      "connections": [
+        "DIRAMAZIONE"
+      ],
+      "level": 0,
+      "width_m": 2,
+      "kind": "track",
+      "simulated_recipients": [
+        "TRAIN_B2"
+      ]
+    },
+    {
+      "id": "DIRAMAZIONE",
+      "coordinates": [
+        [
+          45.01880639692014,
+          8.90861624347865
+        ],
+        [
+          45.01885002910665,
+          8.907507014609433
+        ],
+        [
+          45.01929505585458,
+          8.905371442123935
+        ]
+      ],
+      "connections": [
+        "BIVIO"
+      ],
+      "level": 0,
+      "width_m": 2,
+      "kind": "track",
+      "simulated_recipients": [
+        "TRAIN_B2"
+      ]
+    },
+    {
+      "id": "PARALLELO",
+      "coordinates": [
+        [
+          45.01951967403386,
+          8.910412527808745
+        ],
+        [
+          45.01838880535567,
+          8.90612091696899
+        ]
+      ],
+      "connections": [],
+      "level": 0,
+      "width_m": 2,
+      "kind": "track",
+      "simulated_recipients": [
+        "TRAIN_P3"
+      ]
+    },
+    {
+      "id": "ATTRAVERSAMENTO",
+      "coordinates": [
+        [
+          45.01745811652142,
+          8.90932727237691
+        ],
+        [
+          45.020154677318864,
+          8.907905214580392
+        ]
+      ],
+      "connections": [],
+      "level": 0,
+      "width_m": 2,
+      "kind": "track",
+      "simulated_recipients": [
+        "TRAIN_C4"
+      ]
+    },
+    {
+      "id": "BINARIO_ESTERNO",
+      "coordinates": [
+        [
+          45.02310104384296,
+          8.908523857297743
+        ],
+        [
+          45.02197017516478,
+          8.904232246457989
+        ]
+      ],
+      "connections": [],
+      "level": 0,
+      "width_m": 2,
+      "kind": "track",
+      "simulated_recipients": [
+        "TRAIN_E5"
+      ]
+    },
+    {
+      "id": "CAVALCAVIA",
+      "coordinates": [
+        [
+          45.01728958147158,
+          8.909416150989193
+        ],
+        [
+          45.0203232123687,
+          8.907816335968109
+        ]
+      ],
+      "connections": [],
+      "level": 1,
+      "width_m": 2,
+      "kind": "bridge",
+      "simulated_recipients": [
+        "TRAIN_S6"
+      ]
+    }
+  ]
+}

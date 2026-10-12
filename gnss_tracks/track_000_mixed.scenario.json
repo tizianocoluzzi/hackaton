@@ -1,0 +1,16 @@
+{
+  "network_id": "track-mixed-junction-v1",
+  "vehicles": [
+    {
+      "id": "TRAIN_001",
+      "csv": "track_000_mixed.csv",
+      "geometry": "track_000_mixed.geometry.csv",
+      "level": 0,
+      "direction": 1,
+      "route": [
+        "BIVIO"
+      ],
+      "transits": []
+    }
+  ]
+}

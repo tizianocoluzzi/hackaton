@@ -23,3 +23,23 @@ I file `.scenario.json` descrivono flotta, percorsi e transiti; i `.vehicle.csv`
 Rigenerazione: `.venv/bin/python -m tools.generate_fleet_demos`.
 
 Dopo una modifica al supporto del replay: `docker compose up -d --build simulation alerts`.
+
+## Bivio · incertezza e occupazioni
+
+Selezionare `gnss_tracks/scenario_bivio.csv`, avviare l'analisi e premere
+**Centra posizioni** per mantenere il confronto in vista. La traccia contiene
+solo TRAIN_001: gli altri treni sono destinatari fittizi, senza coordinate.
+I dati sono un estratto invariato della traccia `track_000_mixed.csv`.
+
+- 0–19 s: avvicinamento prima dello spoofing.
+- 20 s: inizio dell'episodio di spoofing originale.
+- 45 s: l'ellisse coinvolge il bivio.
+- 46 s: viene coinvolto il binario parallelo a 25 m.
+- 48 s: vengono coinvolti attraversamento e diramazione.
+- Dal recupero GNSS: risoluzione dopo evidenza stabile di separazione.
+
+Il binario esterno a 450 m e il cavalcavia di livello 1 restano esclusi.
+Gli avvisi riportano destinatari virtuali TRAIN_B2, TRAIN_P3 e TRAIN_C4;
+la consegna è simulata dal servizio allarmi locale, senza contatti esterni.
+Anche la traccia completa originale usa questa stessa rete.
+Rigenerazione: `python -m tools.generate_track_network`.

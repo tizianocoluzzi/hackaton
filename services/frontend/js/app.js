@@ -7,18 +7,17 @@
 const CONFIG = {
     ...window.RUNTIME_CONFIG,
     destination: "/exchange/gnss.events/telemetry.classified.v1",
-    maxHistory: 60,
     maxEvents: 100
 };
 
 const COLORS = {
-    red: "#dd0000",
+    red: "#781e3a",
     green: "#25c78a",
     yellow: "#ffbd45",
     danger: "#ff5268",
-    text: "#f5f5f5",
-    muted: "#a6a6a6",
-    grid: "#383838"
+    text: "#29252a",
+    muted: "#6d6870",
+    grid: "#eae7e9"
 };
 
 const $ = id => document.getElementById(id);
@@ -34,6 +33,8 @@ let activeFile = null;
 let pendingSession = null;
 let requestedRoute = null;
 let latestPositions = [];
+let followPositions = false;
+const lastGpsPositions = new Map();
 const geometryCache = new Map();
 const vehicleStreams = new Map();
 const retiredSessions = new Set();
@@ -82,7 +83,8 @@ const crowdMarker = L.circleMarker([0, 0], {
 }).bindTooltip("Media utenti", { permanent: true, direction: "bottom", className: "crowd-label" });
 
 function validPosition(position) {
-    return position && Number.isFinite(position.latitude) && Number.isFinite(position.longitude);
+    return position && Number.isFinite(position.latitude) && Number.isFinite(position.longitude)
+        && Math.abs(position.latitude) <= 90 && Math.abs(position.longitude) <= 180;
 }
 
 function showMarker(marker, position, valid) {
@@ -93,6 +95,31 @@ function showMarker(marker, position, valid) {
     marker.setLatLng([position.latitude, position.longitude]);
     if (!map.hasLayer(marker)) marker.addTo(map);
 }
+
+function setFollowPositions(enabled) {
+    followPositions = enabled;
+    $("positions-view-btn").setAttribute("aria-pressed", String(enabled));
+    $("positions-view-btn").textContent = enabled ? "Interrompi inseguimento" : "Centra posizioni";
+    if (enabled) framePositions();
+}
+
+function framePositions() {
+    if (latestPositions.length) map.fitBounds(L.latLngBounds(latestPositions), {
+        padding: [60, 60], maxZoom: 17, animate: false
+    });
+}
+
+// Only user gestures stop following; automatic fitBounds must not disable it.
+map.on("dragstart", () => setFollowPositions(false));
+map.getContainer().addEventListener("wheel", () => setFollowPositions(false), { passive: true });
+map.getContainer().addEventListener("dblclick", () => setFollowPositions(false));
+map.getContainer().addEventListener("touchstart", event => {
+    if (event.touches.length > 1) setFollowPositions(false);
+}, { passive: true });
+map.getContainer().addEventListener("keydown", event => {
+    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "+", "-", "="].includes(event.key)) setFollowPositions(false);
+});
+map.zoomControl.getContainer().addEventListener("click", () => setFollowPositions(false));
 
 function frameRoute() {
     if (plannedRoute.getLatLngs().length) {
@@ -115,7 +142,8 @@ async function showRoute(file) {
         const points = geometryCache.get(file);
         plannedRoute.setLatLngs(points);
         routeOutline.setLatLngs(points);
-        frameRoute();
+        if (followPositions) framePositions();
+        else frameRoute();
         $("route-status").textContent = "Percorso previsto dalla geometria del file. I marcatori mostrano le ultime posizioni ricevute.";
     } catch (error) {
         if (requestedRoute === file) $("route-status").textContent = error.message;
@@ -128,11 +156,12 @@ const occupiedLayer = L.layerGroup().addTo(map);
 const fleetLayer = L.layerGroup().addTo(map);
 const estimatedMarker = L.circleMarker([0,0], {
     radius: 9, color: '#ffbd45', fillColor: '#ffbd45', fillOpacity: 1
-}).bindTooltip('Posizione stimata');
+}).bindTooltip('Posizione stimata', { permanent: true, direction: 'left' });
 
 function updateMap(data) {
     const loc = data.localization;
     uncertaintyLayer.clearLayers();
+    showMarker(estimatedMarker, null, false);
     if (loc) {
         for (const shape of loc.areas) L.polygon(shape.coordinates, {
             color: '#ff5268', weight: 1, fillColor: '#ff5268', fillOpacity: .18
@@ -143,15 +172,39 @@ function updateMap(data) {
             loc.areas.map(a => `${displayNumber(2*a.semi_along_m)} × ${displayNumber(2*a.semi_lateral_m)} m · ${displayNumber(a.heading_deg)}°`).join(' / ');
     }
 
-    const gpsValid = data.gnss.fix_status === true && validPosition(data.position) && (loc?.gnss_usable ?? false);
+    const currentGps = validPosition(data.position);
+    const gpsReliable = currentGps && data.gnss.fix_status === true && (loc?.gnss_usable ?? false);
+    const savedGps = lastGpsPositions.get(data.vehicle_id);
+    const gpsPosition = currentGps ? data.position : savedGps?.position;
+    const gpsVisible = validPosition(gpsPosition);
     const crowd = data.crowd_position;
     const crowdValid = validPosition(crowd) && crowd.num_phones > 0 && loc?.quality?.users?.usable;
-    showMarker(vehicleMarker, data.position, gpsValid);
+    const gpsColor = gpsReliable ? "#1689ef" : "#c22e45";
+    vehicleMarker.setStyle({ fillColor: gpsColor, dashArray: currentGps ? null : "4 3" });
+    let gpsLabel = "GPS non disponibile";
+    if (gpsVisible) {
+        if (gpsReliable) gpsLabel = "GPS affidabile";
+        else if (currentGps) gpsLabel = "GPS non affidabile";
+        else {
+            const age = (Date.parse(data.timestamp) - Date.parse(savedGps.timestamp)) / 1000;
+            gpsLabel = "Ultima posizione GPS" + (Number.isFinite(age) && age >= 0 ? ` · ${Math.round(age)} s fa` : " · precedente");
+        }
+    }
+    const tooltip = document.createElement("span");
+    tooltip.textContent = gpsLabel;
+    vehicleMarker.unbindTooltip().bindTooltip(tooltip, {
+        permanent: true, direction: "top", className: gpsReliable ? "gps-label" : "gps-label gps-unreliable"
+    });
+    showMarker(vehicleMarker, gpsPosition, gpsVisible);
     showMarker(crowdMarker, crowd, crowdValid);
+    if (gpsVisible) vehicleMarker.bringToFront();
     latestPositions = [];
-    if (gpsValid) latestPositions.push([data.position.latitude, data.position.longitude]);
+    if (gpsVisible) latestPositions.push([gpsPosition.latitude, gpsPosition.longitude]);
     if (crowdValid) latestPositions.push([crowd.latitude, crowd.longitude]);
-    $("gps-map-status").textContent = gpsValid ? "Posizione GPS attuale" : "GPS non disponibile (fix assente)";
+    if (validPosition(loc?.position)) latestPositions.push([loc.position.latitude, loc.position.longitude]);
+    $("gps-map-status").textContent = gpsLabel;
+    $("gps-legend-symbol").style.backgroundColor = gpsColor;
+    if (followPositions) framePositions();
     $("crowd-map-status").textContent = crowdValid
         ? `Media utenti · ${displayNumber(crowd.num_phones)} telefoni` : "Media utenti non disponibile";
     $("crowd-latitude").textContent = crowdValid ? displayNumber(crowd.latitude, 6) : "--";
@@ -168,6 +221,7 @@ function resetSession() {
     showMarker(vehicleMarker, null, false);
     showMarker(crowdMarker, null, false);
     vehicleStreams.clear();
+    lastGpsPositions.clear();
     selectedVehicle = null;
     alertRevision = -1;
     alertSignature = null;
@@ -182,9 +236,6 @@ function resetSession() {
     alertedVehicles.clear();
     fleetLayer.clearLayers();
     showMarker(estimatedMarker, null, false);
-    chart.data.labels = [];
-    chart.data.datasets[0].data = [];
-    chart.update("none");
     $("event-log").replaceChildren();
 }
 
@@ -196,7 +247,7 @@ async function loadCatalog() {
     select.replaceChildren();
     for (const folder of ["gnss_tracks", "dataset"]) {
         const group = document.createElement("optgroup");
-        group.label = folder === "gnss_tracks" ? "Tracce dimostrative" : "Dataset · split / rotta / scenario";
+        group.label = folder === "gnss_tracks" ? "Tracce GNSS" : "Dataset · split / rotta / scenario";
         for (const track of catalog.tracks.filter(track => track.id.startsWith(folder + "/"))) {
             const option = document.createElement("option");
             option.value = track.id;
@@ -241,7 +292,6 @@ async function selectTrack() {
         $("anomaly").textContent = "In attesa di analisi";
         $("anomaly").className = "anomaly-box";
         $("anomaly-message").textContent = "Raccolta dei primi campioni";
-        $("fallback").textContent = "Attendere la nuova analisi";
         $("last-update").textContent = "Ultimo aggiornamento: --";
         $("gps-map-status").textContent = "GPS in attesa";
         $("crowd-map-status").textContent = "Media utenti in attesa";
@@ -252,78 +302,6 @@ async function selectTrack() {
     } finally {
         $("analyze-btn").disabled = false;
     }
-}
-
-// ==========================================
-// GRAFICO
-// ==========================================
-
-const chart = new Chart($("confidence-chart"), {
-    type: "line",
-
-    data: {
-        labels: [],
-        datasets: [{
-            label: "Score dimostrativo (0–100)",
-            data: [],
-            borderColor: COLORS.red,
-            backgroundColor: "rgba(221,0,0,0.12)",
-            fill: true,
-            tension: 0.3,
-            pointRadius: 1,
-            borderWidth: 2
-        }]
-    },
-
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: false,
-
-        scales: {
-            y: {
-                min: 0,
-                max: 100,
-                ticks: { color: COLORS.muted },
-                grid: { color: COLORS.grid }
-            },
-
-            x: {
-                ticks: {
-                    color: COLORS.muted,
-                    maxTicksLimit: 7
-                },
-                grid: { color: COLORS.grid }
-            }
-        },
-
-        plugins: {
-            legend: {
-                labels: { color: COLORS.text }
-            }
-        }
-    }
-});
-
-function updateChart(data) {
-    const score = data.analysis.confidence_score;
-
-
-    const date = new Date(data.timestamp);
-
-    const label = Number.isNaN(date.getTime())
-        ? "--"
-        : date.toLocaleTimeString("it-IT");
-
-    chart.data.labels.push(label);
-    chart.data.datasets[0].data.push(Number.isFinite(score) ? score : null);
-
-    if (chart.data.labels.length > CONFIG.maxHistory) {
-        chart.data.labels.shift();
-        chart.data.datasets[0].data.shift();
-    }
-
-    chart.update("none");
 }
 
 // ==========================================
@@ -350,7 +328,7 @@ function displayNumber(value, decimals = 0) {
 }
 
 function updateDashboard(data) {
-    if (!data || !data.position ||
+    if (!data ||
         !data.gnss || !data.analysis) {
         console.warn("JSON incompleto", data);
         return;
@@ -377,6 +355,11 @@ function updateDashboard(data) {
     const previous = vehicleStreams.get(data.vehicle_id);
     if (previous && data.sequence <= previous.sequence) return;
     vehicleStreams.set(data.vehicle_id, data);
+    // Store every accepted vehicle sample, including vehicles not currently selected.
+    if (validPosition(data.position)) lastGpsPositions.set(data.vehicle_id, {
+        position: { latitude: data.position.latitude, longitude: data.position.longitude },
+        timestamp: data.timestamp
+    });
     if (!previous) {
         const option = document.createElement('option');
         option.value = data.vehicle_id; option.textContent = data.vehicle_id;
@@ -390,7 +373,7 @@ function updateDashboard(data) {
 
 function renderVehicle(data) {
     const analysis = data.analysis;
-    const position = data.position;
+    const position = data.position || {};
     const gnss = data.gnss;
 
     const status = statusClasses[analysis.status]
@@ -468,15 +451,12 @@ function renderVehicle(data) {
     $("anomaly-message").textContent =
         analysis.message || "--";
 
-    $("fallback").textContent =
-        analysis.fallback || "Nessuna indicazione";
 
     $("last-update").textContent =
         "Ultimo aggiornamento: " +
         new Date(data.timestamp).toLocaleString("it-IT");
 
     updateMap(data);
-    updateChart(data);
 
     if (status !== lastStatus ||
         anomaly !== lastAnomaly) {
@@ -585,7 +565,7 @@ function connectRabbitMQ() {
 
         onConnect: () => {
             $("connection-status").textContent =
-                "RABBITMQ CONNESSO";
+                "CONNESSO";
 
             $("connection-dot").className =
                 "dot connected";
@@ -613,7 +593,7 @@ function connectRabbitMQ() {
 
         onWebSocketClose: () => {
             $("connection-status").textContent =
-                "RABBITMQ DISCONNESSO";
+                "DISCONNESSO";
 
             $("connection-dot").className =
                 "dot disconnected";
@@ -668,8 +648,8 @@ function updateAlerts(snapshot) {
     alertRevision = snapshot.revision;
     networkLayer.clearLayers();
     for (const zone of snapshot.network || []) {
-        const label = document.createElement('span'); label.textContent = zone.id + ' · livello ' + zone.level;
-        L.polyline(zone.coordinates, {color: zone.level === 0 ? '#8aa8bb' : '#999', weight: 3,
+        const label = document.createElement('span'); label.textContent = zone.id + (zone.level ? ' · cavalcavia, livello separato' : ' · binario');
+        L.polyline(zone.coordinates, {color: zone.level === 0 ? '#747b85' : '#999', weight: 4,
             dashArray: zone.level === 0 ? null : '6,6'}).bindTooltip(label).addTo(networkLayer);
     }
     alertedVehicles = new Set(snapshot.alerts.filter(a => a.risk_state !== 'RESOLVED').flatMap(a => a.recipients));
@@ -690,10 +670,10 @@ function updateAlerts(snapshot) {
     for (const alert of snapshot.alerts) {
         const row = document.createElement('article'); row.className = 'alert-entry';
         const title = document.createElement('strong');
-        title.textContent = `${alert.vehicle_id} · ${alert.zone_id} · ${alert.risk_state === 'RESOLVED' ? 'Risolto: zona esclusa' : 'Possibile occupazione · localizzazione incerta'}`;
+        title.textContent = `${alert.zone_id} · ${alert.risk_state === 'RESOLVED' ? 'Risolto: zona esclusa' : 'Possibile occupazione'}`;
         const detail = document.createElement('p');
         detail.textContent = (alert.risk_state === 'RESOLVED' ? '' : 'Allerta mantenuta: occupazione non ancora esclusa. ') +
-            Object.entries(alert.notifications).map(([id,n]) => `${id}: ${n.state === 'ACKNOWLEDGED' ? 'Preso in carico' : n.confirmed ? 'Avviso ricevuto' : n.state === 'SENDING' ? 'Notifica in corso' : 'Rilevato'} (Notifica simulata, tentativi ${n.attempts})`).join(' · ');
+            Object.entries(alert.notifications).map(([id,n]) => `${id === 'CONTROL_ROOM' ? 'Sala di controllo' : id}: ${n.state === 'ACKNOWLEDGED' ? 'preso in carico' : n.confirmed ? 'avviso simulato ricevuto' : n.state === 'SENDING' ? 'avviso simulato in corso' : 'avviso simulato in attesa'}`).join(' · ');
         row.append(title,detail);
         const control = alert.notifications.CONTROL_ROOM;
         if (control?.confirmed && control.state !== 'ACKNOWLEDGED' && alert.risk_state !== 'RESOLVED') {
@@ -715,7 +695,6 @@ function updateAlerts(snapshot) {
 
 $('vehicle-select').addEventListener('change', () => {
     selectedVehicle = $('vehicle-select').value;
-    chart.data.labels = []; chart.data.datasets[0].data = [];
     const data = vehicleStreams.get(selectedVehicle);
     if (data) renderVehicle(data);
 });
@@ -732,8 +711,14 @@ $("stop-btn").addEventListener("click", async () => {
 });
 $("export-btn").addEventListener("click", exportEvents);
 $("analyze-btn").addEventListener("click", selectTrack);
-$("route-view-btn").addEventListener("click", frameRoute);
+$("route-view-btn").addEventListener("click", () => {
+    setFollowPositions(false);
+    frameRoute();
+});
 $("positions-view-btn").addEventListener("click", () => {
-    if (latestPositions.length) map.fitBounds(L.latLngBounds(latestPositions), { padding: [60, 60], maxZoom: 17 });
+    setFollowPositions(!followPositions);
 });
 loadCatalog().catch(error => { $("selection-status").textContent = error.message; }).finally(connectRabbitMQ);
+
+// Keep Leaflet aligned with the responsive dashboard grid.
+new ResizeObserver(() => map.invalidateSize()).observe($("map"));

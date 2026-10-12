@@ -121,6 +121,9 @@ class AlertEngine:
                 continue
             recipients = {'CONTROL_ROOM'}
             zone = next(s for s in network['segments'] if s['id'] == occ['zone_id'])
+            # Track-only fixtures have named virtual recipients, never vehicle positions.
+            if network.get('simulated') is True:
+                recipients.update(zone.get('simulated_recipients', []))
             for vid, vehicle in session['vehicles'].items():
                 if vid == occ['vehicle_id']:
                     continue

@@ -39,7 +39,7 @@ class ReplayControl:
         self.select(initial)
 
     def catalog(self):
-        return [{'id': key, 'label': 'Demo ferroviaria · scambio e tre mezzi' if key.endswith('/demo_switch.csv') else key} for key in self.tracks]
+        return [{'id': key, 'label': 'Bivio · incertezza e occupazioni' if key.endswith('/scenario_bivio.csv') else 'Scambio ferroviario · tre mezzi' if key.endswith('/demo_switch.csv') else key} for key in self.tracks]
 
     def snapshot(self):
         with self.condition:

@@ -13,7 +13,6 @@
     <link rel="stylesheet"
           href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
 </head>
 
@@ -21,7 +20,7 @@
     <header class="topbar">
         <div>
             <h1>MERMEC <span>SAFE MOBILITY</span></h1>
-            <p>GNSS / PNT Resilience Monitoring System</p>
+            <p>Centrale di monitoraggio · GNSS / PNT</p>
         </div>
 
         <div class="connection">
@@ -32,51 +31,43 @@
 
     <div class="toolbar">
         <div class="file-picker">
-            <label for="track-select">File CSV da analizzare</label>
+            <label for="track-select">Traccia</label>
             <select id="track-select"><option value="">Caricamento file…</option></select>
         </div>
         <button id="analyze-btn">Analizza dall’inizio</button>
-        <button id="start-btn">Riprendi aggiornamenti</button>
-        <button id="stop-btn">Sospendi aggiornamenti</button>
+        <button id="start-btn">Riprendi</button>
+        <button id="stop-btn">Sospendi</button>
         <p id="selection-status" role="status">Caricamento del catalogo…</p>
     </div>
 
     <main class="dashboard">
 
-        <section class="metrics">
-            <div class="card">
-                <h3>STATO GNSS</h3>
-                <div id="system-status" class="status attention">
-                    IN ATTESA
+        <section class="metrics" aria-label="Stato del monitoraggio">
+            <div class="card gnss-card">
+                <div class="gnss-summary">
+                    <h3>STATO E INDICE GNSS</h3>
+                    <div class="big-value" id="confidence">--</div>
+                    <div id="system-status" class="status attention">IN ATTESA</div>
                 </div>
                 <p id="status-description">In attesa di telemetria</p>
+                <div class="progress"><div id="confidence-bar"></div></div>
             </div>
-
-            <div class="card">
-                <h3>SCORE DIMOSTRATIVO</h3>
-                <p>Indice dimostrativo, non una probabilità calibrata</p>
-                <div class="big-value" id="confidence">--</div>
-                <div class="progress">
-                    <div id="confidence-bar"></div>
+                <div class="card anomaly-card">
+                    <h2>RILEVAMENTO ANOMALIE</h2>
+                    <div id="anomaly" class="anomaly-box">
+                        Nessuna anomalia
+                    </div>
+                    <p id="anomaly-message">
+                        In attesa di telemetria.
+                    </p>
                 </div>
-            </div>
-
-            <div class="card">
-                <h3>SATELLITI UTILIZZATI</h3>
-                <div class="big-value" id="satellites">--</div>
-                <p>Satelliti GNSS</p>
-            </div>
-
-            <div class="card">
-                <h3>HDOP</h3>
-                <div class="big-value" id="hdop">--</div>
-                <p>Diluizione orizzontale della precisione</p>
-            </div>
-
-            <div class="card">
-                <h3>QUALITÀ SEGNALE</h3>
-                <div class="big-value" id="signal">-- dB-Hz</div>
-                <p>Rapporto portante/rumore (dB-Hz)</p>
+            <div class="card signal-card">
+                <h3>QUALITÀ RICEZIONE</h3>
+                <div class="signal-metrics">
+                    <div><span>Satelliti</span><strong id="satellites">--</strong></div>
+                    <div><span>HDOP</span><strong id="hdop">--</strong></div>
+                    <div><span>Segnale C/N₀</span><strong id="signal">-- dB-Hz</strong></div>
+                </div>
             </div>
         </section>
 
@@ -88,31 +79,26 @@
                     <span id="vehicle-id">TRAIN_001</span>
                 </div>
 
-                <p class="active-file">File in analisi: <strong id="active-file">--</strong></p>
+                <p class="active-file">Traccia attiva: <strong id="active-file">--</strong></p>
                 <div class="map-controls">
                     <button id="route-view-btn">Inquadra percorso</button>
-                    <button id="positions-view-btn">Centra posizioni</button>
+                    <button id="positions-view-btn" aria-pressed="false" title="Mantieni GPS, stima e utenti in vista">Centra posizioni</button>
                 </div>
                 <div id="map"></div>
 
                 <div class="map-legend">
                     <span><i class="legend-route" aria-hidden="true"></i>Percorso previsto</span>
-                    <span><i class="legend-gps" aria-hidden="true"></i><span id="gps-map-status">Posizione GPS attuale</span></span>
+                    <span><i id="gps-legend-symbol" class="legend-gps" aria-hidden="true"></i><span id="gps-map-status">Posizione GPS attuale</span></span>
                     <span><i class="legend-crowd" aria-hidden="true"></i><span id="crowd-map-status">Posizione media utenti</span></span>
                 </div>
-                <p id="route-status">La traccia grigia rappresenta il percorso previsto, non le misure GPS.</p>
-            </div>
-
-            <div class="side-panel">
-
-                <div class="card">
-                    <h2>GPS DEL MEZZO · ULTIMO CAMPIONE</h2>
+                <div class="telemetry-strip">                <div class="card">
+                    <h2>TELEMETRIA MEZZO</h2>
                     <div class="data-row">
                         <span>Velocità</span>
                         <strong id="speed">-- km/h</strong>
                     </div>
                     <div class="data-row">
-                        <span>Heading</span>
+                        <span>Direzione</span>
                         <strong id="heading">--°</strong>
                     </div>
                     <div class="data-row">
@@ -130,34 +116,23 @@
                 </div>
 
                 <div class="card">
-                    <h2>POSIZIONE MEDIA DEGLI UTENTI</h2>
-                    <p>Media delle posizioni dei telefoni a bordo, indipendente dal ricevitore GPS del mezzo.</p>
+                    <h2>POSIZIONE UTENTI</h2>
+
                     <div class="data-row"><span>Latitudine media</span><strong id="crowd-latitude">--</strong></div>
                     <div class="data-row"><span>Longitudine media</span><strong id="crowd-longitude">--</strong></div>
                     <div class="data-row"><span>Telefoni utilizzati</span><strong id="crowd-phones">--</strong></div>
                 </div>
-                <div class="card">
-                    <h2>ANOMALY DETECTION</h2>
-                    <div id="anomaly" class="anomaly-box">
-                        Nessuna anomalia
-                    </div>
-                    <p id="anomaly-message">
-                        In attesa di telemetria.
-                    </p>
-                </div>
-
-                <div class="card">
-                    <h2>FALLBACK CONSIGLIATO</h2>
-                    <p id="fallback">
-                        Nessuna azione necessaria.
-                    </p>
-                </div>
-
+</div>
+                <p id="route-status">La traccia grigia rappresenta il percorso previsto, non le misure GPS.</p>
             </div>
-        </section>
 
-        <section class="bottom-grid">
-            <div class="card">
+            <div class="side-panel">
+            <div class="card alerts-card">
+                <h2>OCCUPAZIONI E ALLARMI</h2>
+                <p id="alerts-status" role="status">In attesa del servizio allarmi</p>
+                <div id="alerts-list" aria-live="polite"></div>
+            </div>
+            <div class="card localization-card">
                 <h2>LOCALIZZAZIONE</h2>
                 <label for="vehicle-select">Mezzo visualizzato</label>
                 <select id="vehicle-select" aria-label="Mezzo visualizzato"></select>
@@ -165,26 +140,12 @@
                 <p id="localization-detail"></p>
                 <p class="localization-legend">● Blu: GNSS utilizzabile · ● Giallo: stima · ● Verde: mezzi · ● Arancio: destinatari<br>
                 Rosso trasparente: area d’incertezza stimata · Linee rosse: occupazioni possibili</p>
-                <small>Stima dimostrativa: nessuna percentuale di contenimento validata.</small>
-            </div>
-            <div class="card">
-                <h2>OCCUPAZIONI E ALLARMI</h2>
-                <p id="alerts-status" role="status">In attesa del servizio allarmi</p>
-                <div id="alerts-list" aria-live="polite"></div>
-            </div>
-        </section>
-        <section class="bottom-grid">
-
-            <div class="card">
-                <h2>SCORE DIMOSTRATIVO · CRONOLOGIA</h2>
-                <div class="chart-container">
-                    <canvas id="confidence-chart"></canvas>
-                </div>
+                <small>Area d’incertezza stimata · contenimento non validato.</small>
             </div>
 
-            <div class="card">
+            <div class="card events-card">
                 <div class="section-heading">
-                    <h2>EVENT LOG</h2>
+                    <h2>REGISTRO EVENTI</h2>
                     <button id="export-btn">Esporta CSV</button>
                 </div>
 
@@ -202,11 +163,13 @@
                 </div>
             </div>
 
+            </div>
         </section>
+
     </main>
 
     <footer>
-        <span>SAFE MOBILITY HACK 2026</span>
+        <span>MERMEC · Monitoraggio mobilità</span>
         <span id="last-update">Ultimo aggiornamento: --</span>
     </footer>
 
