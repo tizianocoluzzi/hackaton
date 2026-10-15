@@ -1,0 +1,61 @@
+{
+  "id": "demo_degrado_progressivo",
+  "expected_vehicles": [
+    "TRAIN_001",
+    "TRAIN_002",
+    "TRAIN_003"
+  ],
+  "segments": [
+    {
+      "id": "binario-1",
+      "coordinates": [
+        [
+          44.9977516959852,
+          9.0
+        ],
+        [
+          45.0022483040148,
+          9.0
+        ]
+      ],
+      "connections": [],
+      "kind": "track",
+      "level": 0,
+      "width_m": 2
+    },
+    {
+      "id": "binario-2",
+      "coordinates": [
+        [
+          44.9977516959852,
+          9.00050873312481
+        ],
+        [
+          45.0022483040148,
+          9.00050873312481
+        ]
+      ],
+      "connections": [],
+      "kind": "track",
+      "level": 0,
+      "width_m": 2
+    },
+    {
+      "id": "binario-3",
+      "coordinates": [
+        [
+          44.9977516959852,
+          8.99949126687519
+        ],
+        [
+          45.0022483040148,
+          8.99949126687519
+        ]
+      ],
+      "connections": [],
+      "kind": "track",
+      "level": 0,
+      "width_m": 2
+    }
+  ]
+}

@@ -1,0 +1,818 @@
+[
+  {
+    "second": 0,
+    "risk": null,
+    "status": "ATTENTION",
+    "localization": "ESTIMATED",
+    "semi_lateral_m": 7.2046496614468385,
+    "recipients": [],
+    "delivered": []
+  },
+  {
+    "second": 1,
+    "risk": null,
+    "status": "ATTENTION",
+    "localization": "ESTIMATED",
+    "semi_lateral_m": 7.20698023031918,
+    "recipients": [],
+    "delivered": []
+  },
+  {
+    "second": 2,
+    "risk": 0.00024005963095109428,
+    "status": "NOMINAL",
+    "localization": "GNSS_DEGRADED",
+    "semi_lateral_m": 8.777214786793834,
+    "recipients": [],
+    "delivered": []
+  },
+  {
+    "second": 3,
+    "risk": 0.00024005963095109423,
+    "status": "NOMINAL",
+    "localization": "GNSS_DEGRADED",
+    "semi_lateral_m": 8.79897585736547,
+    "recipients": [],
+    "delivered": []
+  },
+  {
+    "second": 4,
+    "risk": 0.00024005963095109428,
+    "status": "NOMINAL",
+    "localization": "GNSS_DEGRADED",
+    "semi_lateral_m": 8.8290908872833,
+    "recipients": [],
+    "delivered": []
+  },
+  {
+    "second": 5,
+    "risk": 0.00024005963095109428,
+    "status": "NOMINAL",
+    "localization": "GNSS_DEGRADED",
+    "semi_lateral_m": 8.867222152417067,
+    "recipients": [],
+    "delivered": [
+      "CONTROL_ROOM"
+    ]
+  },
+  {
+    "second": 6,
+    "risk": 0.00024005963095109423,
+    "status": "NOMINAL",
+    "localization": "GNSS_DEGRADED",
+    "semi_lateral_m": 8.912952791069364,
+    "recipients": [],
+    "delivered": [
+      "CONTROL_ROOM"
+    ]
+  },
+  {
+    "second": 7,
+    "risk": 0.00024005963095109423,
+    "status": "NOMINAL",
+    "localization": "GNSS_DEGRADED",
+    "semi_lateral_m": 8.965798422044765,
+    "recipients": [],
+    "delivered": [
+      "CONTROL_ROOM"
+    ]
+  },
+  {
+    "second": 8,
+    "risk": 0.00024005963095109428,
+    "status": "NOMINAL",
+    "localization": "GNSS_DEGRADED",
+    "semi_lateral_m": 9.025219960753207,
+    "recipients": [],
+    "delivered": [
+      "CONTROL_ROOM"
+    ]
+  },
+  {
+    "second": 9,
+    "risk": 0.001700798309025509,
+    "status": "NOMINAL",
+    "localization": "GNSS_DEGRADED",
+    "semi_lateral_m": 9.09063701142245,
+    "recipients": [],
+    "delivered": [
+      "CONTROL_ROOM"
+    ]
+  },
+  {
+    "second": 10,
+    "risk": 0.0017007983090255093,
+    "status": "NOMINAL",
+    "localization": "GNSS_DEGRADED",
+    "semi_lateral_m": 9.161441248590737,
+    "recipients": [],
+    "delivered": [
+      "CONTROL_ROOM"
+    ]
+  },
+  {
+    "second": 11,
+    "risk": 0.001700798309025509,
+    "status": "NOMINAL",
+    "localization": "GNSS_DEGRADED",
+    "semi_lateral_m": 9.237009272693873,
+    "recipients": [],
+    "delivered": [
+      "CONTROL_ROOM"
+    ]
+  },
+  {
+    "second": 12,
+    "risk": 0.0017007983090255093,
+    "status": "NOMINAL",
+    "localization": "GNSS_RELIABLE",
+    "semi_lateral_m": 10.5,
+    "recipients": [],
+    "delivered": [
+      "CONTROL_ROOM"
+    ]
+  },
+  {
+    "second": 13,
+    "risk": 0.001700798309025509,
+    "status": "NOMINAL",
+    "localization": "GNSS_RELIABLE",
+    "semi_lateral_m": 10.5,
+    "recipients": [],
+    "delivered": [
+      "CONTROL_ROOM"
+    ]
+  },
+  {
+    "second": 14,
+    "risk": 0.01756392326779438,
+    "status": "NOMINAL",
+    "localization": "GNSS_RELIABLE",
+    "semi_lateral_m": 10.5,
+    "recipients": [],
+    "delivered": [
+      "CONTROL_ROOM"
+    ]
+  },
+  {
+    "second": 15,
+    "risk": 0.01756392326779438,
+    "status": "NOMINAL",
+    "localization": "GNSS_RELIABLE",
+    "semi_lateral_m": 10.5,
+    "recipients": [],
+    "delivered": [
+      "CONTROL_ROOM"
+    ]
+  },
+  {
+    "second": 16,
+    "risk": 0.01756392326779438,
+    "status": "NOMINAL",
+    "localization": "GNSS_RELIABLE",
+    "semi_lateral_m": 10.5,
+    "recipients": [],
+    "delivered": [
+      "CONTROL_ROOM"
+    ]
+  },
+  {
+    "second": 17,
+    "risk": 0.01756392326779438,
+    "status": "NOMINAL",
+    "localization": "GNSS_RELIABLE",
+    "semi_lateral_m": 10.5,
+    "recipients": [],
+    "delivered": [
+      "CONTROL_ROOM"
+    ]
+  },
+  {
+    "second": 18,
+    "risk": 0.01756392326779438,
+    "status": "NOMINAL",
+    "localization": "GNSS_RELIABLE",
+    "semi_lateral_m": 10.5,
+    "recipients": [],
+    "delivered": [
+      "CONTROL_ROOM"
+    ]
+  },
+  {
+    "second": 19,
+    "risk": 0.01756392326779438,
+    "status": "NOMINAL",
+    "localization": "GNSS_RELIABLE",
+    "semi_lateral_m": 10.5,
+    "recipients": [],
+    "delivered": [
+      "CONTROL_ROOM"
+    ]
+  },
+  {
+    "second": 20,
+    "risk": 0.6234119109883719,
+    "status": "DEGRADED",
+    "localization": "GNSS_DEGRADED",
+    "semi_lateral_m": 12.317028472344994,
+    "recipients": [],
+    "delivered": [
+      "CONTROL_ROOM"
+    ]
+  },
+  {
+    "second": 21,
+    "risk": 0.46064837592074,
+    "status": "ATTENTION",
+    "localization": "GNSS_DEGRADED",
+    "semi_lateral_m": 12.31928214456584,
+    "recipients": [],
+    "delivered": [
+      "CONTROL_ROOM"
+    ]
+  },
+  {
+    "second": 22,
+    "risk": 0.4622495826073924,
+    "status": "ATTENTION",
+    "localization": "GNSS_DEGRADED",
+    "semi_lateral_m": 12.323024098589148,
+    "recipients": [],
+    "delivered": [
+      "CONTROL_ROOM"
+    ]
+  },
+  {
+    "second": 23,
+    "risk": 0.5125506204584837,
+    "status": "DEGRADED",
+    "localization": "GNSS_DEGRADED",
+    "semi_lateral_m": 12.328233240585767,
+    "recipients": [],
+    "delivered": [
+      "CONTROL_ROOM"
+    ]
+  },
+  {
+    "second": 24,
+    "risk": 0.4607997275735601,
+    "status": "ATTENTION",
+    "localization": "GNSS_DEGRADED",
+    "semi_lateral_m": 12.334880456754142,
+    "recipients": [],
+    "delivered": [
+      "CONTROL_ROOM"
+    ]
+  },
+  {
+    "second": 25,
+    "risk": 0.46079972757356,
+    "status": "ATTENTION",
+    "localization": "GNSS_DEGRADED",
+    "semi_lateral_m": 12.342929017631842,
+    "recipients": [],
+    "delivered": [
+      "CONTROL_ROOM"
+    ]
+  },
+  {
+    "second": 26,
+    "risk": 0.4622495826073924,
+    "status": "ATTENTION",
+    "localization": "GNSS_DEGRADED",
+    "semi_lateral_m": 12.352335079686199,
+    "recipients": [],
+    "delivered": [
+      "CONTROL_ROOM"
+    ]
+  },
+  {
+    "second": 27,
+    "risk": 0.46064837592074,
+    "status": "ATTENTION",
+    "localization": "GNSS_DEGRADED",
+    "semi_lateral_m": 12.363048271560274,
+    "recipients": [],
+    "delivered": [
+      "CONTROL_ROOM"
+    ]
+  },
+  {
+    "second": 28,
+    "risk": 0.9996372048776269,
+    "status": "UNRELIABLE",
+    "localization": "ESTIMATED",
+    "semi_lateral_m": 90.49213468368289,
+    "recipients": [
+      "TRAIN_002",
+      "TRAIN_003"
+    ],
+    "delivered": [
+      "CONTROL_ROOM"
+    ]
+  },
+  {
+    "second": 29,
+    "risk": 0.9996372048776269,
+    "status": "UNRELIABLE",
+    "localization": "ESTIMATED",
+    "semi_lateral_m": 91.59509960212509,
+    "recipients": [
+      "TRAIN_002",
+      "TRAIN_003"
+    ],
+    "delivered": [
+      "CONTROL_ROOM"
+    ]
+  },
+  {
+    "second": 30,
+    "risk": 0.9999597855227882,
+    "status": "UNRELIABLE",
+    "localization": "ESTIMATED",
+    "semi_lateral_m": 92.6967709688913,
+    "recipients": [
+      "TRAIN_002",
+      "TRAIN_003"
+    ],
+    "delivered": [
+      "CONTROL_ROOM"
+    ]
+  },
+  {
+    "second": 31,
+    "risk": 0.9996372048776269,
+    "status": "UNRELIABLE",
+    "localization": "ESTIMATED",
+    "semi_lateral_m": 93.7971943632507,
+    "recipients": [
+      "TRAIN_002",
+      "TRAIN_003"
+    ],
+    "delivered": [
+      "CONTROL_ROOM"
+    ]
+  },
+  {
+    "second": 32,
+    "risk": 0.9996372048776269,
+    "status": "UNRELIABLE",
+    "localization": "ESTIMATED",
+    "semi_lateral_m": 94.89641319985826,
+    "recipients": [
+      "TRAIN_002",
+      "TRAIN_003"
+    ],
+    "delivered": [
+      "CONTROL_ROOM"
+    ]
+  },
+  {
+    "second": 33,
+    "risk": 0.9839982470612497,
+    "status": "UNRELIABLE",
+    "localization": "ESTIMATED",
+    "semi_lateral_m": 95.99446885837487,
+    "recipients": [
+      "TRAIN_002",
+      "TRAIN_003"
+    ],
+    "delivered": [
+      "CONTROL_ROOM",
+      "TRAIN_002",
+      "TRAIN_003"
+    ]
+  },
+  {
+    "second": 34,
+    "risk": 0.9839982470612497,
+    "status": "UNRELIABLE",
+    "localization": "ESTIMATED",
+    "semi_lateral_m": 97.09140080371296,
+    "recipients": [
+      "TRAIN_002",
+      "TRAIN_003"
+    ],
+    "delivered": [
+      "CONTROL_ROOM",
+      "TRAIN_002",
+      "TRAIN_003"
+    ]
+  },
+  {
+    "second": 35,
+    "risk": 0.9839982470612497,
+    "status": "UNRELIABLE",
+    "localization": "ESTIMATED",
+    "semi_lateral_m": 98.1872466977022,
+    "recipients": [
+      "TRAIN_002",
+      "TRAIN_003"
+    ],
+    "delivered": [
+      "CONTROL_ROOM",
+      "TRAIN_002",
+      "TRAIN_003"
+    ]
+  },
+  {
+    "second": 36,
+    "risk": 0.9839982470612497,
+    "status": "UNRELIABLE",
+    "localization": "ESTIMATED",
+    "semi_lateral_m": 99.2820425028922,
+    "recipients": [
+      "TRAIN_002",
+      "TRAIN_003"
+    ],
+    "delivered": [
+      "CONTROL_ROOM",
+      "TRAIN_002",
+      "TRAIN_003"
+    ]
+  },
+  {
+    "second": 37,
+    "risk": 0.9839982470612497,
+    "status": "UNRELIABLE",
+    "localization": "ESTIMATED",
+    "semi_lateral_m": 100.37582257914113,
+    "recipients": [
+      "TRAIN_002",
+      "TRAIN_003"
+    ],
+    "delivered": [
+      "CONTROL_ROOM",
+      "TRAIN_002",
+      "TRAIN_003"
+    ]
+  },
+  {
+    "second": 38,
+    "risk": 0.9839982470612497,
+    "status": "UNRELIABLE",
+    "localization": "ESTIMATED",
+    "semi_lateral_m": 101.46861977357733,
+    "recipients": [
+      "TRAIN_002",
+      "TRAIN_003"
+    ],
+    "delivered": [
+      "CONTROL_ROOM",
+      "TRAIN_002",
+      "TRAIN_003"
+    ]
+  },
+  {
+    "second": 39,
+    "risk": 0.9839982470612497,
+    "status": "UNRELIABLE",
+    "localization": "ESTIMATED",
+    "semi_lateral_m": 102.56046550446649,
+    "recipients": [
+      "TRAIN_002",
+      "TRAIN_003"
+    ],
+    "delivered": [
+      "CONTROL_ROOM",
+      "TRAIN_002",
+      "TRAIN_003"
+    ]
+  },
+  {
+    "second": 40,
+    "risk": 0.9839982470612497,
+    "status": "UNRELIABLE",
+    "localization": "ESTIMATED",
+    "semi_lateral_m": 103.65138983946804,
+    "recipients": [
+      "TRAIN_002",
+      "TRAIN_003"
+    ],
+    "delivered": [
+      "CONTROL_ROOM",
+      "TRAIN_002",
+      "TRAIN_003"
+    ]
+  },
+  {
+    "second": 41,
+    "risk": 0.9839982470612497,
+    "status": "UNRELIABLE",
+    "localization": "ESTIMATED",
+    "semi_lateral_m": 104.7414215687202,
+    "recipients": [
+      "TRAIN_002",
+      "TRAIN_003"
+    ],
+    "delivered": [
+      "CONTROL_ROOM",
+      "TRAIN_002",
+      "TRAIN_003"
+    ]
+  },
+  {
+    "second": 42,
+    "risk": 0.9839982470612497,
+    "status": "UNRELIABLE",
+    "localization": "ESTIMATED",
+    "semi_lateral_m": 105.83058827315385,
+    "recipients": [
+      "TRAIN_002",
+      "TRAIN_003"
+    ],
+    "delivered": [
+      "CONTROL_ROOM",
+      "TRAIN_002",
+      "TRAIN_003"
+    ]
+  },
+  {
+    "second": 43,
+    "risk": 0.9839982470612497,
+    "status": "UNRELIABLE",
+    "localization": "ESTIMATED",
+    "semi_lateral_m": 106.91891638840023,
+    "recipients": [
+      "TRAIN_002",
+      "TRAIN_003"
+    ],
+    "delivered": [
+      "CONTROL_ROOM",
+      "TRAIN_002",
+      "TRAIN_003"
+    ]
+  },
+  {
+    "second": 44,
+    "risk": 0.9839982470612497,
+    "status": "UNRELIABLE",
+    "localization": "ESTIMATED",
+    "semi_lateral_m": 108.00643126462468,
+    "recipients": [
+      "TRAIN_002",
+      "TRAIN_003"
+    ],
+    "delivered": [
+      "CONTROL_ROOM",
+      "TRAIN_002",
+      "TRAIN_003"
+    ]
+  },
+  {
+    "second": 45,
+    "risk": 0.9839982470612497,
+    "status": "UNRELIABLE",
+    "localization": "ESTIMATED",
+    "semi_lateral_m": 109.09315722259089,
+    "recipients": [
+      "TRAIN_002",
+      "TRAIN_003"
+    ],
+    "delivered": [
+      "CONTROL_ROOM",
+      "TRAIN_002",
+      "TRAIN_003"
+    ]
+  },
+  {
+    "second": 46,
+    "risk": 0.9839982470612497,
+    "status": "UNRELIABLE",
+    "localization": "ESTIMATED",
+    "semi_lateral_m": 110.17911760623352,
+    "recipients": [
+      "TRAIN_002",
+      "TRAIN_003"
+    ],
+    "delivered": [
+      "CONTROL_ROOM",
+      "TRAIN_002",
+      "TRAIN_003"
+    ]
+  },
+  {
+    "second": 47,
+    "risk": 0.9839982470612497,
+    "status": "UNRELIABLE",
+    "localization": "ESTIMATED",
+    "semi_lateral_m": 111.26433483199371,
+    "recipients": [
+      "TRAIN_002",
+      "TRAIN_003"
+    ],
+    "delivered": [
+      "CONTROL_ROOM",
+      "TRAIN_002",
+      "TRAIN_003"
+    ]
+  },
+  {
+    "second": 48,
+    "risk": 0.9839982470612497,
+    "status": "UNRELIABLE",
+    "localization": "ESTIMATED",
+    "semi_lateral_m": 112.34883043515066,
+    "recipients": [
+      "TRAIN_002",
+      "TRAIN_003"
+    ],
+    "delivered": [
+      "CONTROL_ROOM",
+      "TRAIN_002",
+      "TRAIN_003"
+    ]
+  },
+  {
+    "second": 49,
+    "risk": 0.9839982470612497,
+    "status": "UNRELIABLE",
+    "localization": "ESTIMATED",
+    "semi_lateral_m": 113.43262511336381,
+    "recipients": [
+      "TRAIN_002",
+      "TRAIN_003"
+    ],
+    "delivered": [
+      "CONTROL_ROOM",
+      "TRAIN_002",
+      "TRAIN_003"
+    ]
+  },
+  {
+    "second": 50,
+    "risk": 0.9839982470612497,
+    "status": "UNRELIABLE",
+    "localization": "ESTIMATED",
+    "semi_lateral_m": 114.51573876762134,
+    "recipients": [
+      "TRAIN_002",
+      "TRAIN_003"
+    ],
+    "delivered": [
+      "CONTROL_ROOM",
+      "TRAIN_002",
+      "TRAIN_003"
+    ]
+  },
+  {
+    "second": 51,
+    "risk": 0.9839982470612497,
+    "status": "UNRELIABLE",
+    "localization": "ESTIMATED",
+    "semi_lateral_m": 115.59819054077673,
+    "recipients": [
+      "TRAIN_002",
+      "TRAIN_003"
+    ],
+    "delivered": [
+      "CONTROL_ROOM",
+      "TRAIN_002",
+      "TRAIN_003"
+    ]
+  },
+  {
+    "second": 52,
+    "risk": 0.9839982470612497,
+    "status": "UNRELIABLE",
+    "localization": "ESTIMATED",
+    "semi_lateral_m": 116.67999885383875,
+    "recipients": [
+      "TRAIN_002",
+      "TRAIN_003"
+    ],
+    "delivered": [
+      "CONTROL_ROOM",
+      "TRAIN_002",
+      "TRAIN_003"
+    ]
+  },
+  {
+    "second": 53,
+    "risk": 0.9839982470612497,
+    "status": "UNRELIABLE",
+    "localization": "ESTIMATED",
+    "semi_lateral_m": 117.76118144016883,
+    "recipients": [
+      "TRAIN_002",
+      "TRAIN_003"
+    ],
+    "delivered": [
+      "CONTROL_ROOM",
+      "TRAIN_002",
+      "TRAIN_003"
+    ]
+  },
+  {
+    "second": 54,
+    "risk": 0.9839982470612497,
+    "status": "UNRELIABLE",
+    "localization": "ESTIMATED",
+    "semi_lateral_m": 118.84175537772649,
+    "recipients": [
+      "TRAIN_002",
+      "TRAIN_003"
+    ],
+    "delivered": [
+      "CONTROL_ROOM",
+      "TRAIN_002",
+      "TRAIN_003"
+    ]
+  },
+  {
+    "second": 55,
+    "risk": 0.9839982470612497,
+    "status": "UNRELIABLE",
+    "localization": "ESTIMATED",
+    "semi_lateral_m": 119.92173711949334,
+    "recipients": [
+      "TRAIN_002",
+      "TRAIN_003"
+    ],
+    "delivered": [
+      "CONTROL_ROOM",
+      "TRAIN_002",
+      "TRAIN_003"
+    ]
+  },
+  {
+    "second": 56,
+    "risk": 0.9839982470612497,
+    "status": "UNRELIABLE",
+    "localization": "ESTIMATED",
+    "semi_lateral_m": 121.00114252219612,
+    "recipients": [
+      "TRAIN_002",
+      "TRAIN_003"
+    ],
+    "delivered": [
+      "CONTROL_ROOM",
+      "TRAIN_002",
+      "TRAIN_003"
+    ]
+  },
+  {
+    "second": 57,
+    "risk": 0.9839982470612497,
+    "status": "UNRELIABLE",
+    "localization": "ESTIMATED",
+    "semi_lateral_m": 122.07998687343975,
+    "recipients": [
+      "TRAIN_002",
+      "TRAIN_003"
+    ],
+    "delivered": [
+      "CONTROL_ROOM",
+      "TRAIN_002",
+      "TRAIN_003"
+    ]
+  },
+  {
+    "second": 58,
+    "risk": 0.9839982470612497,
+    "status": "UNRELIABLE",
+    "localization": "ESTIMATED",
+    "semi_lateral_m": 123.15828491735382,
+    "recipients": [
+      "TRAIN_002",
+      "TRAIN_003"
+    ],
+    "delivered": [
+      "CONTROL_ROOM",
+      "TRAIN_002",
+      "TRAIN_003"
+    ]
+  },
+  {
+    "second": 59,
+    "risk": 0.9839982470612497,
+    "status": "UNRELIABLE",
+    "localization": "ESTIMATED",
+    "semi_lateral_m": 124.23605087884692,
+    "recipients": [
+      "TRAIN_002",
+      "TRAIN_003"
+    ],
+    "delivered": [
+      "CONTROL_ROOM",
+      "TRAIN_002",
+      "TRAIN_003"
+    ]
+  },
+  {
+    "second": 60,
+    "risk": 0.9839982470612497,
+    "status": "UNRELIABLE",
+    "localization": "ESTIMATED",
+    "semi_lateral_m": 125.31329848655827,
+    "recipients": [
+      "TRAIN_002",
+      "TRAIN_003"
+    ],
+    "delivered": [
+      "CONTROL_ROOM",
+      "TRAIN_002",
+      "TRAIN_003"
+    ]
+  }
+]

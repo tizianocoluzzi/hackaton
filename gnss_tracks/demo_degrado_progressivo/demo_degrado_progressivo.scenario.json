@@ -1,0 +1,56 @@
+{
+  "network_id": "demo_degrado_progressivo",
+  "vehicles": [
+    {
+      "id": "TRAIN_001",
+      "csv": "demo_degrado_progressivo.csv",
+      "geometry": "demo_degrado_progressivo.geometry.csv",
+      "route": [
+        "binario-1"
+      ],
+      "direction": 1,
+      "level": 0,
+      "transits": [
+        {
+          "zone_id": "binario-1",
+          "enter": 0,
+          "exit": 80
+        }
+      ]
+    },
+    {
+      "id": "TRAIN_002",
+      "csv": "train_002.vehicle.csv",
+      "geometry": "train_002.geometry.csv",
+      "route": [
+        "binario-2"
+      ],
+      "direction": 1,
+      "level": 0,
+      "transits": [
+        {
+          "zone_id": "binario-2",
+          "enter": 0,
+          "exit": 80
+        }
+      ]
+    },
+    {
+      "id": "TRAIN_003",
+      "csv": "train_003.vehicle.csv",
+      "geometry": "train_003.geometry.csv",
+      "route": [
+        "binario-3"
+      ],
+      "direction": 1,
+      "level": 0,
+      "transits": [
+        {
+          "zone_id": "binario-3",
+          "enter": 0,
+          "exit": 80
+        }
+      ]
+    }
+  ]
+}
